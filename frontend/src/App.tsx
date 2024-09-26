@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import axios from "axios";
-
+import { Link } from "react-router-dom";
+/*    */ 
 const serverURL = "http://localhost:3000";
 
 type Survey = { name:string; questions: [string]; results: [[string]] };
@@ -26,20 +27,28 @@ function App() {
       {surveys.map((survey) => {
         return (
           <div>
-            {survey.name}
-            <a href={serverURL + "/surveys:"+survey.name+"/take"}>
-              <button >Take this survey</button>
-            </a>
-            <a href={serverURL +"/surveys:"+survey.name+ "/results"}>
-              <button >View survey results</button>
-            </a>          
+            <div>
+              {survey.name}
+            </div>
+            <div>
+            <Link to={"/take"}>
+
+            Take this survey
+            </Link>
+            </div>
+            <div>
+            <Link to={"/results"}>
+             View survey results
+            </Link> 
+            </div>
+ 
           </div>
-        );
+        );          
       })}
       <div>
-        <a href={serverURL + "/create"}>
-            <button >Create new surveys</button>
-        </a>  
+        <Link to="/create">
+            Create new surveys
+        </Link>  
       </div>
       
     </div>

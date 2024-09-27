@@ -21,23 +21,32 @@ const port = 3000;
 
 app.get("/surveys", async (req, res) => {
     const surveys = await prisma.survey.findMany();
-    console.log(surveys);
     res.json(surveys);
   });
   
+app.get("/questions/:surveyId", async (req, res) => {
+    const questions = await prisma.question.findMany({
+      where:{
+        surveyId: req.params.surveyId,
+      }
+    }
 
-app.post("surveys/create", async (req, res) => {
+    );
+    console.log(questions);
+    res.json(questions);
+  });
+  
+
+
+app.post("/surveys/create", async (req, res) => {
   try{
     console.log("create");
 
-    const { surveyId, surveyName} = req.body;
-    console.log(surveyId, surveyName);
+    const { surveyName} = req.body;
+    console.log(surveyName);
 
     const ret =await prisma.survey.create({
-      data: {
-        id: surveyId,
-        name: surveyName,
-      },
+      data: {name: surveyName as string},
     });
     console.log(ret);
     res.status(201).json(ret);
@@ -54,7 +63,6 @@ app.post("surveys/create", async (req, res) => {
   
       const ret = await prisma.question.create({
         data: {
-          id: uuidv4(),
           surveyId: surveyId,
           content: newQuestion,
         },
@@ -68,6 +76,28 @@ app.post("surveys/create", async (req, res) => {
     }
   });
 
+  app.post("/surveys/editQuestion", async (req, res) => {
+    try {
+      const { surveyId,questionId, newQuestion } = req.body;
+  
+      const ret = await prisma.question.update({
+        where: {
+          surveyId: surveyId,
+          id: questionId,
+        },
+  
+      data :{
+        content: newQuestion,
+      },
+    });
+
+      console.log(ret);
+      res.status(201).json(ret);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

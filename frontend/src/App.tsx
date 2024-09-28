@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import Survey from "./Survey";
 
 const serverURL = "http://localhost:3000";
 
-type SurveyData = {id:string;name:string};
+type SurveyData = {id:string;name:string;};
 
 function App() {
   const [surveys, setSurveys] = useState<SurveyData[]>([]);
   const [surveyName, setSurveyName] = useState("");
-
+  const [editMode,setEditMode] = useState(false);
+  
   const fetch = async () => {
     const res = await axios.get(serverURL + "/surveys");
+
     setSurveys(res.data);
+
   };
   useEffect(() => {
     fetch();
@@ -28,34 +31,24 @@ function App() {
     fetch();
     setSurveyName("");
       };
+
+    const toggleEditMode=()=>{
+      setEditMode(!editMode);
+    }
   
     return (
       <div>
+        {editMode ? <div>Edit Mode</div> : <div>Answer Mode</div>}
+        <button onClick={toggleEditMode}>Toggle</button>
+
         {surveys.map((survey) => {
           return (
             <div>
-              <div>
-                {survey.name}
-              </div>
-              <div>
-                <Link to={"/edit/:"+survey.id}>
-                  Edit this survey
-                </Link>
-              </div>
-              <div>
-                <Link to={"/take"}>
-                  Take this survey
-                </Link>
-              </div>
-              <div>
-                <Link to={"/results"}>
-                  View survey results
-                </Link> 
-              </div>
+                  <Survey editMode={editMode} surveyName={survey.name} surveyId={survey.id}/>
             </div>
           );          
         })}
-        <div>
+         {editMode ?<div>
           <form
             style={{ display: "flex", flexDirection: "column" }}
             onSubmit={onFormSubmit}
@@ -64,7 +57,7 @@ function App() {
             <input value={surveyName} onChange={(e) => setSurveyName(e.target.value)} />  
             <button type="submit">Add Survey</button>
           </form> 
-        </div>
+        </div> : null}
         
       </div>
     );

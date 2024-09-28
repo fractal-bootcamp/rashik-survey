@@ -1,25 +1,26 @@
 import {useEffect, useState } from "react";
 import "./App.css";
 import axios from "axios";
-import { Link, useParams } from "react-router-dom";
 const serverURL = "http://localhost:3000";
 
 
 
 type SurveyProps={
   editMode : boolean;
+  surveyName : string;
+  surveyId : string;
 }
 
-type RouteParams={
-  surveyId: string;
-}
-type QuestionData = {id:string;content:string,surveyId:string};
 
-function Survey({editMode}:SurveyProps) {
-  const [content, setContent] = useState("");
+type QuestionData = {
+  content:string;
+  surveyId:string;
+};
+
+function Survey({editMode,surveyName,surveyId}:SurveyProps) {
+  const [name, setName] = useState(surveyName);
   const [questions, setQuestions] = useState<QuestionData[]>([]);
-  const params = useParams<RouteParams>();
-  const surveyId = params.surveyId?.substring(1);
+ 
   const fetch = async () => {
     const res = await axios.get(serverURL + "/questions/"+surveyId);
     setQuestions(res.data);
@@ -31,54 +32,68 @@ function Survey({editMode}:SurveyProps) {
 
   const onFormSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
       e.preventDefault();
-      console.log(surveyId);
-      const addQuestionResponse = await axios.post(`${serverURL}/surveys/addQuestion`, {
+      await axios.post(`${serverURL}/surveys/edit`, {
         surveyId: surveyId,
-        newQuestion: content,
+        newQuestions: questions,
       });
-      console.log('Add Question Response:', addQuestionResponse.data);
       fetch();
-      setContent("");
   };
+
   
+
   if (editMode){
+    function handleEdit(index: number, value: string): void {
+      const updatedQuestions = questions.map((question, i) =>
+        i === index ? { ...question, content: value } : question
+      );
+      setQuestions(updatedQuestions);
+    }
+
+    function handleAdd(value: string): void {
+      const updatedQuestions = structuredClone(questions);
+      updatedQuestions.push({content:value,surveyId:surveyId});
+      setQuestions({...updatedQuestions});
+    }
+
     return (
       <div>
         <form
           style={{ display: "flex", flexDirection: "column" }}
           onSubmit={onFormSubmit}
         >
-          Questions
+            <div>
+              <input value={name} onChange={(e) => setName(e.target.value)} />
+              {name}
+            </div>
+              Questions
             <div>    
               {
-                questions.map((question)=>{
+                questions.map((question,index)=>{
+
+     
                   return(
-                    <div>
-                      {question.content}
-                      <div>
-                        <Link to={"/edit/:"+surveyId+"/:"+question.id}>
-                          Edit
-                        </Link>
-                      </div>
+                    <div key={index}>
+                      <input value={question.content} onChange={(e) => handleEdit(index,e.target.value)} />
                     </div>
                   );
-                })
-              }
+                })}
             </div>
-          <input value={content} onChange={(e) => setContent(e.target.value)} />
-          <button type="submit">Add Question</button>
-          <div>
-              <Link to={"/"}>
-                  Home
-              </Link>
-          </div>
+            <div>
+              <input value={""} onChange={(e) => handleAdd(e.target.value)} />
+              <button type="submit">Add Question</button>
+
+            </div>
+          <button type="submit">Save Changes</button>
         </form>
       </div>
     );
   }
   else{
     return(
-      <div></div>
+      <div>
+
+      
+      </div>
     )
   }
 
